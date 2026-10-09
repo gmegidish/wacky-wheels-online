@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wacky Wheels</title>
+    <style>
+      :root {
+        --color-backdrop: #000;
+        --color-text: #f4dc00;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--color-backdrop);
+        color: var(--color-text);
+        font: 16px/1.4 ui-monospace, monospace;
+      }
+      main {
+        height: 100%;
+        display: grid;
+        place-items: center;
+      }
+      /* as wide as the window; never narrower than the original 320x200 picture shown at 4:3 */
+      #screen {
+        grid-area: 1 / 1;
+        width: 100vw;
+        height: min(100vh, 100vw * 3 / 4);
+      }
+      #status {
+        grid-area: 1 / 1;
+        z-index: 1;
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <canvas id="screen" aria-label="Game screen. Drive with the arrow keys."></canvas>
+      <p id="status" role="alert" hidden></p>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

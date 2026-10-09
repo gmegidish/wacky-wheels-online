@@ -1,0 +1,5 @@
+node_modules
+dist
+.DS_Store
+# the original game files: supply your own copy, never published
+dos/
