@@ -8,6 +8,9 @@
       :root {
         --color-backdrop: #000;
         --color-text: #f4dc00;
+        --color-panel: #0b1e6b;
+        --color-muted: #c8d4ff;
+        --color-error: #ff8a7a;
       }
       html,
       body {
@@ -33,12 +36,77 @@
         z-index: 1;
         padding: 1rem;
       }
+      #pick {
+        grid-area: 1 / 1;
+        z-index: 1;
+        max-width: 30rem;
+        margin: 1rem;
+        padding: 1.5rem 1.75rem;
+        background: var(--color-panel);
+        border: 3px solid var(--color-text);
+        box-shadow: 6px 6px 0 #000;
+      }
+      #pick h1 {
+        margin: 0 0 0.75rem;
+        font-size: 1.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      #pick p {
+        margin: 0 0 1.25rem;
+        color: var(--color-muted);
+      }
+      #pick code {
+        color: var(--color-text);
+      }
+      #pick label {
+        display: inline-block;
+        padding: 0.6rem 1.1rem;
+        background: var(--color-text);
+        color: #000;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 3px 3px 0 #000;
+      }
+      #pick label:hover {
+        filter: brightness(1.1);
+      }
+      #pick label:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0 #000;
+      }
+      #pick label:focus-within {
+        outline: 3px solid #fff;
+        outline-offset: 3px;
+      }
+      #pick input {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+      }
+      #pick-error {
+        margin: 1rem 0 0;
+        color: var(--color-error);
+      }
+      #pick-error:empty {
+        display: none;
+      }
     </style>
   </head>
   <body>
     <main>
       <canvas id="screen" aria-label="Game screen. Drive with the arrow keys."></canvas>
       <p id="status" role="alert" hidden></p>
+      <section id="pick" aria-labelledby="pick-heading" hidden>
+        <h1 id="pick-heading">Wacky Wheels</h1>
+        <p>
+          This page plays your own copy of the game. Choose <code>WACKY.DAT</code> from the folder the game is
+          installed in. It is read right here in your browser and never uploaded.
+        </p>
+        <label>Choose WACKY.DAT<input id="pick-file" type="file" accept=".dat" /></label>
+        <p id="pick-error" role="alert"></p>
+      </section>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

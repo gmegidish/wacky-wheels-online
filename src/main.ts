@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { type Archive, getFile, parseArchive } from './formats/archive';
+import { type Archive, getFile, hasFile, parseArchive } from './formats/archive';
 import {
   KART_FRAMES_PER_CHARACTER,
   KART_FRAME_HEIGHT,
@@ -23,7 +23,9 @@ import { FOCAL_LENGTH, HORIZON_ROW, SCREEN_HEIGHT, viewWidthFor } from './render
 import { indexedTexture } from './render/texture';
 import { createSurroundMesh, createTrackMesh } from './render/trackMesh';
 
-const ARCHIVE_URL = '/WACKY.DAT';
+const ARCHIVE_URL = `${import.meta.env.BASE_URL}WACKY.DAT`;
+// a file every copy of the game has, to tell WACKY.DAT apart from any other .DAT a player might pick
+const ARCHIVE_SIGNATURE_FILE = 'CARS.SP';
 const TRACK_NUMBER = 1;
 const CHARACTER = 0;
 // camera of the original (docs/re/rendering.md): 124 world pixels behind the kart, about 32 above the ground
@@ -71,12 +73,53 @@ function listenToKeyboard(): void {
   window.addEventListener('blur', () => pressedKeys.clear());
 }
 
-async function fetchArchive(): Promise<Archive> {
+function gameArchiveFrom(bytes: Uint8Array): Archive {
+  const archive = parseArchive(bytes);
+  if (!hasFile(archive, ARCHIVE_SIGNATURE_FILE)) {
+    throw new Error('That file is not the WACKY.DAT of Wacky Wheels');
+  }
+  return archive;
+}
+
+/** WACKY.DAT next to the page, as the dev server provides it; undefined where it is not hosted. */
+async function fetchHostedArchive(): Promise<Archive | undefined> {
   const response = await fetch(ARCHIVE_URL);
   if (!response.ok) {
-    throw new Error(`Could not load ${ARCHIVE_URL}: HTTP ${response.status}`);
+    return undefined;
   }
-  return parseArchive(new Uint8Array(await response.arrayBuffer()));
+  try {
+    return gameArchiveFrom(new Uint8Array(await response.arrayBuffer()));
+  } catch {
+    // a dev server answers a missing file with its index page instead of a 404
+    return undefined;
+  }
+}
+
+/** Asks the player for their own WACKY.DAT. It is read in the browser and never leaves their computer. */
+function askForArchive(): Promise<Archive> {
+  const panel = document.querySelector<HTMLElement>('#pick');
+  const input = document.querySelector<HTMLInputElement>('#pick-file');
+  const error = document.querySelector<HTMLElement>('#pick-error');
+  if (!panel || !input || !error) {
+    throw new Error('The file picker is missing from the page');
+  }
+  panel.hidden = false;
+  return new Promise((resolve) => {
+    input.addEventListener('change', async () => {
+      const [file] = input.files ?? [];
+      if (!file) {
+        return;
+      }
+      try {
+        const archive = gameArchiveFrom(new Uint8Array(await file.arrayBuffer()));
+        panel.hidden = true;
+        resolve(archive);
+      } catch (reason) {
+        error.textContent = reason instanceof Error ? reason.message : String(reason);
+        input.value = '';
+      }
+    });
+  });
 }
 
 function createKartTextures(archive: Archive, track: Track, character: number): THREE.DataTexture[] {
@@ -286,7 +329,7 @@ async function main(): Promise<void> {
     throw new Error('Canvas #screen is missing from the page');
   }
   listenToKeyboard();
-  startGame(canvas, await fetchArchive());
+  startGame(canvas, (await fetchHostedArchive()) ?? (await askForArchive()));
 }
 
 main().catch(showError);
